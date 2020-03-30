@@ -11,6 +11,6 @@ package com.laifeng.sopcastsdk.stream.sender;
  */
 public interface Sender {
     void start();
-    void onData(byte[] data, int type);
+    void onData(byte[] data, int type, int dts);
     void stop();
 }

@@ -42,7 +42,7 @@ public class LocalSender implements Sender{
     }
 
     @Override
-    public void onData(byte[] data, int type) {
+    public void onData(byte[] data, int type, int dts) {
         if (mBuffer != null){
             try {
                 mBuffer.write(data);

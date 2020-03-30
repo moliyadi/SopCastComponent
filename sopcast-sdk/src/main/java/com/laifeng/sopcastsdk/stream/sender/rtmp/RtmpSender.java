@@ -108,12 +108,12 @@ public class RtmpSender implements Sender, SendQueueListener {
     }
 
     @Override
-    public void onData(byte[] data, int type) {
+    public void onData(byte[] data, int type, int dts) {
         if(type == RtmpPacker.FIRST_AUDIO || type == RtmpPacker.AUDIO) {
-            rtmpConnection.publishAudioData(data, type);
+            rtmpConnection.publishAudioData(data, type, dts);
         } else if(type == RtmpPacker.FIRST_VIDEO ||
                 type == RtmpPacker.INTER_FRAME || type == RtmpPacker.KEY_FRAME) {
-            rtmpConnection.publishVideoData(data, type);
+            rtmpConnection.publishVideoData(data, type, dts);
         }
     }
 

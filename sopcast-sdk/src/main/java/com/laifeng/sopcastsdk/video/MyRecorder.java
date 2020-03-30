@@ -27,6 +27,7 @@ public class MyRecorder {
 	private Handler mEncoderHandler;
 	private ReentrantLock encodeLock = new ReentrantLock();
 	private volatile boolean isStarted;
+	private long presentTimeUs;
 
 	public MyRecorder(VideoConfiguration configuration) {
 		mConfiguration = configuration;
@@ -44,6 +45,7 @@ public class MyRecorder {
 		if (mMediaCodec != null || mInputSurface != null) {
 			throw new RuntimeException("prepareEncoder called twice?");
 		}
+		presentTimeUs = System.nanoTime() / 1000;
 		mMediaCodec = VideoMediaCodec.getVideoMediaCodec(mConfiguration);
 		mHandlerThread = new HandlerThread("SopCastEncode");
 		mHandlerThread.start();
@@ -135,6 +137,7 @@ public class MyRecorder {
 				if (outBufferIndex >= 0) {
 					ByteBuffer bb = outBuffers[outBufferIndex];
 					if (mListener != null) {
+						mBufferInfo.presentationTimeUs = System.nanoTime() / 1000 - presentTimeUs;
 						mListener.onVideoEncode(bb, mBufferInfo);
 					}
 					mMediaCodec.releaseOutputBuffer(outBufferIndex, false);

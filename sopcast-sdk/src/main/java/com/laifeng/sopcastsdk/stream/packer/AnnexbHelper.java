@@ -49,8 +49,8 @@ public class AnnexbHelper {
     }
 
     public interface AnnexbNaluListener {
-        void onSpsPps(byte[] sps, byte[] pps);
-        void onVideo(byte[] data, boolean isKeyFrame);
+        void onSpsPps(byte[] sps, byte[] pps, int pts);
+        void onVideo(byte[] data, boolean isKeyFrame, int pts);
     }
 
     public void setAnnexbNaluListener(AnnexbNaluListener listener) {
@@ -71,6 +71,7 @@ public class AnnexbHelper {
      * @param bi 硬编的BufferInfo
      */
     public void analyseVideoData(ByteBuffer bb, MediaCodec.BufferInfo bi) {
+        int pts = (int) (bi.presentationTimeUs / 1000);
         bb.position(bi.offset);
         bb.limit(bi.offset + bi.size);
 
@@ -109,7 +110,7 @@ public class AnnexbHelper {
         }
         if (mPps != null && mSps != null && mListener != null && mUploadPpsSps) {
             if(mListener != null) {
-                mListener.onSpsPps(mSps, mPps);
+                mListener.onSpsPps(mSps, mPps, pts);
             }
             mUploadPpsSps = false;
         }
@@ -129,7 +130,7 @@ public class AnnexbHelper {
             currentSize += frame.length;
         }
         if(mListener != null) {
-            mListener.onVideo(data, isKeyFrame);
+            mListener.onVideo(data, isKeyFrame, pts);
         }
     }
 

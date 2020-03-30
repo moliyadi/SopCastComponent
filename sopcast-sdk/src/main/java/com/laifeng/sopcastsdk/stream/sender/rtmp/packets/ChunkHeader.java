@@ -131,7 +131,7 @@ public class ChunkHeader {
         out.write(((byte) (chunkType.getValue() << 6) | chunkStreamId));
         switch (chunkType) {
             case TYPE_0_FULL: { //  b00 = 12 byte header (full header)
-                absoluteTimestamp = (int) sessionInfo.markAbsoluteTimestampTx();
+                sessionInfo.markDeltaTimestampTx();
                 Util.writeUnsignedInt24(out, absoluteTimestamp >= 0xffffff ? 0xffffff : absoluteTimestamp);
                 Util.writeUnsignedInt24(out, packetLength);
                 out.write(messageType.getValue());
@@ -143,9 +143,9 @@ public class ChunkHeader {
                 break;
             }
             case TYPE_1_LARGE: { // b01 = 8 bytes - like type 0. not including message ID (4 last bytes)
-                absoluteTimestamp = (int) sessionInfo.markAbsoluteTimestampTx();
                 ChunkHeader preChunkHeader = sessionInfo.getPreSendChunkHeader(chunkStreamId);
-                timestampDelta = absoluteTimestamp - preChunkHeader.absoluteTimestamp;
+                timestampDelta = (int) sessionInfo.markDeltaTimestampTx();
+                absoluteTimestamp = preChunkHeader.getAbsoluteTimestamp() + timestampDelta;
                 Util.writeUnsignedInt24(out, absoluteTimestamp >= 0xffffff ? 0xffffff : timestampDelta);
                 Util.writeUnsignedInt24(out, packetLength);
                 out.write(messageType.getValue());
@@ -156,9 +156,9 @@ public class ChunkHeader {
                 break;
             }
             case TYPE_2_TIMESTAMP_ONLY: { // b10 = 4 bytes - Basic Header and timestamp (3 bytes) are included
-                absoluteTimestamp = (int) sessionInfo.markAbsoluteTimestampTx();
                 ChunkHeader preChunkHeader = sessionInfo.getPreSendChunkHeader(chunkStreamId);
-                timestampDelta = absoluteTimestamp - preChunkHeader.absoluteTimestamp;
+                timestampDelta = (int) sessionInfo.markDeltaTimestampTx();
+                absoluteTimestamp = preChunkHeader.getAbsoluteTimestamp() + timestampDelta;
                 Util.writeUnsignedInt24(out, (absoluteTimestamp >= 0xffffff) ? 0xffffff : timestampDelta);
                 if (absoluteTimestamp >= 0xffffff) {
                     extendedTimestamp = absoluteTimestamp;
@@ -167,9 +167,10 @@ public class ChunkHeader {
                 break;
             }
             case TYPE_3_NO_BYTE: { // b11 = 1 byte: basic header only
-                absoluteTimestamp = (int) sessionInfo.markAbsoluteTimestampTx();
-                if (absoluteTimestamp >= 0xffffff) {
-                    extendedTimestamp = absoluteTimestamp;
+//                absoluteTimestamp = (int) sessionInfo.markAbsoluteTimestampTx();
+//                if (absoluteTimestamp >= 0xffffff) {
+//                    extendedTimestamp = absoluteTimestamp;
+                if (extendedTimestamp > 0) {
                     Util.writeUnsignedInt32(out, extendedTimestamp);
                 }
                 break;
@@ -208,6 +209,14 @@ public class ChunkHeader {
 
     public void setPacketLength(int packetLength) {
         this.packetLength = packetLength;
+    }
+
+    public int getAbsoluteTimestamp() {
+        return absoluteTimestamp;
+    }
+
+    public void setAbsoluteTimestamp(int absoluteTimestamp) {
+        this.absoluteTimestamp = absoluteTimestamp;
     }
 
     @Override

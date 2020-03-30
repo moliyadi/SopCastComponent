@@ -85,7 +85,7 @@ public class FlvPacker implements Packer, AnnexbHelper.AnnexbNaluListener{
         FlvPackerHelper.writeFlvTagHeader(buffer, FlvPackerHelper.FlvTag.Audio, audioPacketSize, compositionTime);
         FlvPackerHelper.writeAudioTag(buffer, audio, false, mAudioSampleSize);
         buffer.putInt(dataSize);
-        packetListener.onPacket(buffer.array(), AUDIO);
+        packetListener.onPacket(buffer.array(), AUDIO, -1);
     }
 
     @Override
@@ -96,7 +96,7 @@ public class FlvPacker implements Packer, AnnexbHelper.AnnexbNaluListener{
     }
 
     @Override
-    public void onVideo(byte[] video, boolean isKeyFrame) {
+    public void onVideo(byte[] video, boolean isKeyFrame, int pts) {
         if(packetListener == null || !isHeaderWrite) {
             return;
         }
@@ -118,11 +118,11 @@ public class FlvPacker implements Packer, AnnexbHelper.AnnexbNaluListener{
         FlvPackerHelper.writeFlvTagHeader(buffer, FlvPackerHelper.FlvTag.Video, videoPacketSize, compositionTime);
         FlvPackerHelper.writeH264Packet(buffer, video, isKeyFrame);
         buffer.putInt(dataSize);
-        packetListener.onPacket(buffer.array(), packetType);
+        packetListener.onPacket(buffer.array(), packetType, -1);
     }
 
     @Override
-    public void onSpsPps(byte[] sps, byte[] pps) {
+    public void onSpsPps(byte[] sps, byte[] pps, int pts) {
         if(packetListener == null) {
             return;
         }
@@ -143,7 +143,7 @@ public class FlvPacker implements Packer, AnnexbHelper.AnnexbNaluListener{
         ByteBuffer headerBuffer = ByteBuffer.allocate(size);
         FlvPackerHelper.writeFlvHeader(headerBuffer, true, true);
         headerBuffer.putInt(0);
-        packetListener.onPacket(headerBuffer.array(), HEADER);
+        packetListener.onPacket(headerBuffer.array(), HEADER, -1);
     }
 
     private void writeMetaData() {
@@ -155,7 +155,7 @@ public class FlvPacker implements Packer, AnnexbHelper.AnnexbNaluListener{
         FlvPackerHelper.writeFlvTagHeader(buffer, FlvPackerHelper.FlvTag.Script, metaData.length, 0);
         buffer.put(metaData);
         buffer.putInt(dataSize);
-        packetListener.onPacket(buffer.array(), METADATA);
+        packetListener.onPacket(buffer.array(), METADATA, -1);
     }
 
     private void writeFirstVideoTag(byte[] sps, byte[] pps) {
@@ -166,7 +166,7 @@ public class FlvPacker implements Packer, AnnexbHelper.AnnexbNaluListener{
         FlvPackerHelper.writeFlvTagHeader(buffer, FlvPackerHelper.FlvTag.Video, firstPacketSize, 0);
         FlvPackerHelper.writeFirstVideoTag(buffer, sps, pps);
         buffer.putInt(dataSize);
-        packetListener.onPacket(buffer.array(), FIRST_VIDEO);
+        packetListener.onPacket(buffer.array(), FIRST_VIDEO, -1);
     }
 
     private void writeFirstAudioTag() {
@@ -177,7 +177,7 @@ public class FlvPacker implements Packer, AnnexbHelper.AnnexbNaluListener{
         FlvPackerHelper.writeFlvTagHeader(buffer, FlvPackerHelper.FlvTag.Audio, firstAudioPacketSize, 0);
         FlvPackerHelper.writeFirstAudioTag(buffer, mAudioSampleRate, mIsStereo, mAudioSampleSize);
         buffer.putInt(dataSize);
-        packetListener.onPacket(buffer.array(), FIRST_AUDIO);
+        packetListener.onPacket(buffer.array(), FIRST_AUDIO, -1);
     }
 
     public void initAudioParams(int sampleRate, int sampleSize, boolean isStereo) {

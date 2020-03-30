@@ -393,7 +393,7 @@ public class RtmpConnection implements OnReadListener, OnWriteListener {
         isAudioStereo = isStereo;
     }
 
-    public void publishAudioData(byte[] data, int type) {
+    public void publishAudioData(byte[] data, int type, int dts) {
         if (currentStreamId == -1) {
             return;
         }
@@ -402,6 +402,7 @@ public class RtmpConnection implements OnReadListener, OnWriteListener {
         }
         Audio audio = new Audio();
         audio.setData(data);
+        audio.getChunkHeader().setAbsoluteTimestamp(dts);
         audio.getChunkHeader().setMessageStreamId(currentStreamId);
         Frame<Chunk> frame;
         if(type == RtmpPacker.FIRST_AUDIO) {
@@ -412,7 +413,7 @@ public class RtmpConnection implements OnReadListener, OnWriteListener {
         mSendQueue.putFrame(frame);
     }
 
-    public void publishVideoData(byte[] data, int type) {
+    public void publishVideoData(byte[] data, int type, int dts) {
         if (currentStreamId == -1) {
             return;
         }
@@ -421,6 +422,7 @@ public class RtmpConnection implements OnReadListener, OnWriteListener {
         }
         Video video = new Video();
         video.setData(data);
+        video.getChunkHeader().setAbsoluteTimestamp(dts);
         video.getChunkHeader().setMessageStreamId(currentStreamId);
         Frame<Chunk> frame;
         if(type == RtmpPacker.FIRST_VIDEO) {

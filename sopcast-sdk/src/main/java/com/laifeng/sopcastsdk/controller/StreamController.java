@@ -136,9 +136,9 @@ public class StreamController implements OnAudioEncodeListener, OnVideoEncodeLis
     }
 
     @Override
-    public void onPacket(byte[] data, int packetType) {
+    public void onPacket(byte[] data, int packetType, int dts) {
         if(mSender != null) {
-            mSender.onData(data, packetType);
+            mSender.onData(data, packetType, dts);
         }
     }
 }

@@ -63,6 +63,8 @@ public class RtmpPacker implements Packer, AnnexbHelper.AnnexbNaluListener{
         if(packetListener == null || !isHeaderWrite || !isKeyFrameWrite) {
             return;
         }
+        int dts = (int) (bi.presentationTimeUs / 1000);
+
         bb.position(bi.offset);
         bb.limit(bi.offset + bi.size);
 
@@ -71,7 +73,7 @@ public class RtmpPacker implements Packer, AnnexbHelper.AnnexbNaluListener{
         int size = AUDIO_HEADER_SIZE + audio.length;
         ByteBuffer buffer = ByteBuffer.allocate(size);
         FlvPackerHelper.writeAudioTag(buffer, audio, false, mAudioSampleSize);
-        packetListener.onPacket(buffer.array(), AUDIO);
+        packetListener.onPacket(buffer.array(), AUDIO, dts);
     }
 
     @Override
@@ -82,7 +84,7 @@ public class RtmpPacker implements Packer, AnnexbHelper.AnnexbNaluListener{
     }
 
     @Override
-    public void onVideo(byte[] video, boolean isKeyFrame) {
+    public void onVideo(byte[] video, boolean isKeyFrame, int pts) {
         if(packetListener == null || !isHeaderWrite) {
             return;
         }
@@ -98,33 +100,33 @@ public class RtmpPacker implements Packer, AnnexbHelper.AnnexbNaluListener{
         int size = VIDEO_HEADER_SIZE + video.length;
         ByteBuffer buffer = ByteBuffer.allocate(size);
         FlvPackerHelper.writeH264Packet(buffer, video, isKeyFrame);
-        packetListener.onPacket(buffer.array(), packetType);
+        packetListener.onPacket(buffer.array(), packetType, pts);
     }
 
     @Override
-    public void onSpsPps(byte[] sps, byte[] pps) {
+    public void onSpsPps(byte[] sps, byte[] pps, int pts) {
         if(packetListener == null) {
             return;
         }
         //写入第一个视频信息
-        writeFirstVideoTag(sps, pps);
+        writeFirstVideoTag(sps, pps, pts);
         //写入第一个音频信息
-        writeFirstAudioTag();
+        writeFirstAudioTag(pts);
         isHeaderWrite = true;
     }
 
-    private void writeFirstVideoTag(byte[] sps, byte[] pps) {
+    private void writeFirstVideoTag(byte[] sps, byte[] pps, int dts) {
         int size = VIDEO_HEADER_SIZE + VIDEO_SPECIFIC_CONFIG_EXTEND_SIZE + sps.length + pps.length;
         ByteBuffer buffer = ByteBuffer.allocate(size);
         FlvPackerHelper.writeFirstVideoTag(buffer, sps, pps);
-        packetListener.onPacket(buffer.array(), FIRST_VIDEO);
+        packetListener.onPacket(buffer.array(), FIRST_VIDEO, dts);
     }
 
-    private void writeFirstAudioTag() {
+    private void writeFirstAudioTag(int dts) {
         int size = AUDIO_SPECIFIC_CONFIG_SIZE + AUDIO_HEADER_SIZE;
         ByteBuffer buffer = ByteBuffer.allocate(size);
         FlvPackerHelper.writeFirstAudioTag(buffer, mAudioSampleRate, mIsStereo, mAudioSampleSize);
-        packetListener.onPacket(buffer.array(), FIRST_AUDIO);
+        packetListener.onPacket(buffer.array(), FIRST_AUDIO, dts);
     }
 
     public void initAudioParams(int sampleRate, int sampleSize, boolean isStereo) {

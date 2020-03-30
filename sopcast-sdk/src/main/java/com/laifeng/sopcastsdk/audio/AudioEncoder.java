@@ -24,6 +24,7 @@ public class AudioEncoder {
     private AudioConfiguration mAudioConfiguration;
     MediaCodec.BufferInfo mBufferInfo = new MediaCodec.BufferInfo();
 
+    private long presentTimeUs;
     public void setOnAudioEncodeListener(OnAudioEncodeListener listener) {
         mListener = listener;
     }
@@ -34,6 +35,7 @@ public class AudioEncoder {
 
     void prepareEncoder() {
         mMediaCodec = AudioMediaCodec.getAudioMediaCodec(mAudioConfiguration);
+        presentTimeUs = System.nanoTime() / 1000;
         mMediaCodec.start();
     }
 
@@ -56,7 +58,8 @@ public class AudioEncoder {
             ByteBuffer inputBuffer = inputBuffers[inputBufferIndex];
             inputBuffer.clear();
             inputBuffer.put(input);
-            mMediaCodec.queueInputBuffer(inputBufferIndex, 0, input.length, 0, 0);
+            long pts = System.nanoTime() / 1000 - presentTimeUs;
+            mMediaCodec.queueInputBuffer(inputBufferIndex, 0, input.length, pts, 0);
         }
 
         int outputBufferIndex = mMediaCodec.dequeueOutputBuffer(mBufferInfo, 12000);

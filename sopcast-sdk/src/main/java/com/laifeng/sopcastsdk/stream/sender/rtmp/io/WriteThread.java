@@ -1,8 +1,10 @@
 package com.laifeng.sopcastsdk.stream.sender.rtmp.io;
 
 import com.laifeng.sopcastsdk.entity.Frame;
-import com.laifeng.sopcastsdk.stream.sender.rtmp.packets.Command;
+import com.laifeng.sopcastsdk.stream.sender.rtmp.packets.Audio;
 import com.laifeng.sopcastsdk.stream.sender.rtmp.packets.Chunk;
+import com.laifeng.sopcastsdk.stream.sender.rtmp.packets.Command;
+import com.laifeng.sopcastsdk.stream.sender.rtmp.packets.Video;
 import com.laifeng.sopcastsdk.stream.sender.sendqueue.ISendQueue;
 
 import java.io.IOException;
@@ -39,6 +41,9 @@ public class WriteThread extends Thread {
                 Frame<Chunk> frame = mSendQueue.takeFrame();
                 if(frame != null) {
                     Chunk chunk = frame.data;
+                    if (!(chunk instanceof Video || chunk instanceof Audio)) {
+                        chunk.getChunkHeader().setAbsoluteTimestamp((int) sessionInfo.markAbsoluteTimestampTx());
+                    }
                     chunk.writeTo(out, sessionInfo);
                     if (chunk instanceof Command) {
                         Command command = (Command) chunk;

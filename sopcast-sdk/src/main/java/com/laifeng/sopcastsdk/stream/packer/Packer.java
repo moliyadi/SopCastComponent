@@ -16,7 +16,7 @@ import java.nio.ByteBuffer;
 public interface Packer {
     interface OnPacketListener {
         //第一个参数为打包后的数据，第二个为自定义打包后的类型
-        void onPacket(byte[] data, int packetType);
+        void onPacket(byte[] data, int packetType, int dts);
     }
     //设置打包监听器
     void setPacketListener(OnPacketListener listener);

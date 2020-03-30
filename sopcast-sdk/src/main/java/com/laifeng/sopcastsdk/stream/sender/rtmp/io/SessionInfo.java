@@ -85,6 +85,7 @@ public class SessionInfo {
     }
 
     private static long sessionBeginTimestamp;
+    private long realLastTimestamp = System.nanoTime() / 1000000;  // Do not use wall time!
 
     /** Sets the session beginning timestamp for all chunks */
     public static void markSessionTimestampTx() {
@@ -94,5 +95,13 @@ public class SessionInfo {
     /** Utility method for calculating & synchronizing transmitted timestamps */
     public long markAbsoluteTimestampTx() {
         return System.nanoTime() / 1000000 - sessionBeginTimestamp;
+    }
+
+    /** Utility method for calculating & synchronizing transmitted timestamp deltas */
+    public long markDeltaTimestampTx() {
+        long currentTimestamp = System.nanoTime() / 1000000;
+        long diffTimestamp = currentTimestamp - realLastTimestamp;
+        realLastTimestamp = currentTimestamp;
+        return diffTimestamp;
     }
 }
